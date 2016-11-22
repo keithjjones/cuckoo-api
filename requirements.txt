@@ -1,0 +1,4 @@
+requests[security]
+nose2
+mock
+-r autorequirements.txt
