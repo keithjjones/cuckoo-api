@@ -21,7 +21,7 @@ def main():
 # Static Functions
 #
 def buildapiurl(proto="http", host="127.0.0.1", port=8000,
-                action=None, APIPY=False):
+                action=None):
     """
     Create a URL for the Cuckoo API
 
@@ -35,10 +35,7 @@ def buildapiurl(proto="http", host="127.0.0.1", port=8000,
     if action is None:
         return None
     else:
-        if APIPY is True:
-            return "{0}://{1}:{2}{3}".format(proto, host, port, action)
-        else:
-            return "{0}://{1}:{2}/api{3}/".format(proto, host, port, action)
+        return "{0}://{1}:{2}{3}".format(proto, host, port, action)
 
 
 #
@@ -48,20 +45,17 @@ class CuckooAPI(object):
     """
     Class to hold Cuckoo API data.
     """
-    def __init__(self, host="127.0.0.1", port=8000, proto="http",
-                 APIPY=False):
+    def __init__(self, host="127.0.0.1", port=8000, proto="http"):
         """
 
         :param host: Hostname or IP address of Cuckoo server
         :param port: The port of the Cuckoo server
         :param proto: http or https
-        :param APIPY: Set to true to submit to api.py on the server
 
         """
         self.proto = proto
         self.host = host
         self.port = port
-        self.APIPY = APIPY
 
     def getcuckoostatus(self):
         """
@@ -72,16 +66,12 @@ class CuckooAPI(object):
         """
         # Build the URL
         apiurl = buildapiurl(self.proto, self.host, self.port,
-                             "/cuckoo/status", self.APIPY)
+                             "/cuckoo/status")
 
         request = requests.get(apiurl)
 
-        # ERROR CHECK request.status_code!
-        if request.status_code == 200:
-            jsonreply = json.loads(request.text)
-            return jsonreply
-        else:
-            raise CuckooAPIBadRequest(apiurl)
+        jsonreply = json.loads(request.text)
+        return jsonreply
 
     def listmachines(self):
         """
@@ -92,15 +82,11 @@ class CuckooAPI(object):
         """
         # Build the URL
         apiurl = buildapiurl(self.proto, self.host, self.port,
-                             "/machines/list", self.APIPY)
+                             "/machines/list")
         request = requests.get(apiurl)
 
-        # ERROR CHECK request.status_code!
-        if request.status_code == 200:
-            jsonreply = json.loads(request.text)
-            return jsonreply
-        else:
-            raise CuckooAPIBadRequest(apiurl)
+        jsonreply = json.loads(request.text)
+        return jsonreply
 
     def viewmachine(self, vmname=None):
         """
@@ -115,15 +101,11 @@ class CuckooAPI(object):
             raise CuckooAPINoVM(vmname)
 
         apiurl = buildapiurl(self.proto, self.host, self.port,
-                             "/machines/view/"+vmname, self.APIPY)
+                             "/machines/view/"+vmname)
         request = requests.get(apiurl)
 
-        # ERROR CHECK request.status_code!
-        if request.status_code == 200:
-            jsonreply = json.loads(request.text)
-            return jsonreply
-        else:
-            raise CuckooAPIBadRequest(apiurl)
+        jsonreply = json.loads(request.text)
+        return jsonreply
 
     def taskslist(self, limit=None, offset=None):
         """
@@ -143,15 +125,11 @@ class CuckooAPI(object):
                 baseurl = baseurl+"/"+str(offset)
 
         apiurl = buildapiurl(self.proto, self.host, self.port,
-                             baseurl, self.APIPY)
+                             baseurl)
         request = requests.get(apiurl)
 
-        # ERROR CHECK request.status_code!
-        if request.status_code == 200:
-            jsonreply = json.loads(request.text)
-            return jsonreply
-        else:
-            raise CuckooAPIBadRequest(apiurl)
+        jsonreply = json.loads(request.text)
+        return jsonreply
 
     def taskview(self, taskid=None):
         """
@@ -166,99 +144,30 @@ class CuckooAPI(object):
             raise CuckooAPINoTaskID(taskid)
 
         apiurl = buildapiurl(self.proto, self.host, self.port,
-                             "/tasks/view/"+str(taskid), self.APIPY)
+                             "/tasks/view/"+str(taskid))
 
         request = requests.get(apiurl)
 
-        # ERROR CHECK request.status_code!
-        if request.status_code == 200:
-            jsonreply = json.loads(request.text)
-            return jsonreply
-        else:
-            raise CuckooAPIBadRequest(apiurl)
-
-    def taskstatus(self, taskid=None):
-        """
-        View the task status for the task ID.
-
-        :param taskid: The ID of the task to view.
-        :returns: Returns a dict of task details.
-
-        """
-        # Build the URL
-        if taskid is None or taskid < 1:
-            raise CuckooAPINoTaskID(taskid)
-
-        apiurl = buildapiurl(self.proto, self.host, self.port,
-                             "/tasks/status/"+str(taskid), self.APIPY)
-
-        # Not available with APIPY
-        if self.APIPY is True:
-            raise CuckooAPINotAvailable(apiurl)
-
-        request = requests.get(apiurl)
-
-        # ERROR CHECK request.status_code!
-        if request.status_code == 200:
-            jsonreply = json.loads(request.text)
-            return jsonreply
-        else:
-            raise CuckooAPIBadRequest(apiurl)
-
-    def taskiocs(self, taskid=None, detailed=False):
-        """
-        View the task IOCs for the task ID.
-
-        :param taskid: The ID of the task to view.
-        :param detailed: Set to true for detailed IOCs.
-        :returns: Returns a dict of task details.
-
-        """
-        # Build the URL
-        if taskid is None or taskid < 1:
-            raise CuckooAPINoTaskID(taskid)
-
-        baseurl = "/tasks/get/iocs/"+str(taskid)
-        if detailed is True:
-            baseurl = baseurl + "/detailed"
-
-        apiurl = buildapiurl(self.proto, self.host, self.port,
-                             baseurl, self.APIPY)
-
-        # Not available with APIPY
-        if self.APIPY is True:
-            raise CuckooAPINotAvailable(apiurl)
-
-        request = requests.get(apiurl)
-
-        # ERROR CHECK request.status_code!
-        if request.status_code == 200:
-            jsonreply = json.loads(request.text)
-            return jsonreply
-        else:
-            raise CuckooAPIBadRequest(apiurl)
+        jsonreply = json.loads(request.text)
+        return jsonreply
 
     def taskreport(self, taskid=None, reportformat="json"):
         """
         View the report for the task ID.
 
         :param taskid: The ID of the task to report.
-        :param reportformat: Right now only json is supported.
-        :returns: Returns a dict report for the task.
+        :param reportformat: Format of the data returned.
+            Possible:  json/html/all/dropped/package_files
+        :returns: Returns a dict report for the task if json format, raw
+            data otherwise.
 
         """
         # Build the URL
         if taskid is None or taskid < 1:
             raise CuckooAPINoTaskID(taskid)
 
-        if self.APIPY is True:
-            apiurl = buildapiurl(self.proto, self.host, self.port,
-                                 "/tasks/report/"+str(taskid)+"/"+reportformat,
-                                 self.APIPY)
-        else:
-            apiurl = buildapiurl(self.proto, self.host, self.port,
-                                 "/tasks/get/report/"+str(taskid)+"/" +
-                                 reportformat, self.APIPY)
+        apiurl = buildapiurl(self.proto, self.host, self.port,
+                             "/tasks/report/"+str(taskid)+"/"+reportformat)
 
         # Error on any other format for now...
         if reportformat != "json":
@@ -266,12 +175,11 @@ class CuckooAPI(object):
 
         request = requests.get(apiurl)
 
-        # ERROR CHECK request.status_code!
-        if request.status_code == 200:
+        if reportformat == 'json':
             jsonreply = json.loads(request.text)
             return jsonreply
         else:
-            raise CuckooAPIBadRequest(apiurl)
+            return request.text
 
     def taskdelete(self, taskid=None):
         """
@@ -285,21 +193,12 @@ class CuckooAPI(object):
             raise CuckooAPINoTaskID(taskid)
 
         apiurl = buildapiurl(self.proto, self.host, self.port,
-                             "/tasks/delete/"+str(taskid),
-                             self.APIPY)
+                             "/tasks/delete/"+str(taskid))
 
         request = requests.get(apiurl)
 
-        # ERROR CHECK request.status_code!
-        if request.status_code == 200:
-            jsonreply = json.loads(request.text)
-            return jsonreply
-        elif request.status_code == 404:
-            raise CuckooAPINoTaskID(taskid)
-        elif request.status_code == 500:
-            raise CuckooAPITaskNoDelete(taskid)
-        else:
-            raise CuckooAPIBadRequest(apiurl)
+        jsonreply = json.loads(request.text)
+        return jsonreply
 
     def taskscreenshots(self, taskid=None, filepath=None, screenshot=None):
         """
@@ -323,36 +222,23 @@ class CuckooAPI(object):
         if filepath is None or os.path.exists(filepath):
             raise CuckooAPIFileExists(filepath)
 
-        if self.APIPY is True:
-            filepath = filepath+".zip"
-        else:
-            filepath = filepath+".tar.bz"
+        filepath = filepath+".zip"
 
-        if self.APIPY is True:
-            baseurl = "/tasks/screenshots/"+str(taskid)
-            if screenshot is not None:
-                baseurl = baseurl+"/"+str(screenshot)
-        else:
-            baseurl = "/tasks/get/screenshot/"+str(taskid)
-            if screenshot is not None:
-                baseurl = baseurl+"/"+str(screenshot)
+        baseurl = "/tasks/screenshots/"+str(taskid)
+        if screenshot is not None:
+            baseurl = baseurl+"/"+str(screenshot)
 
         apiurl = buildapiurl(self.proto, self.host, self.port,
-                             baseurl,
-                             self.APIPY)
+                             baseurl)
 
         # Turn on stream to download files
         request = requests.get(apiurl, stream=True)
 
-        # ERROR CHECK request.status_code!
-        if request.status_code == 200:
-            with open(filepath, 'wb') as f:
-                # Read and write in chunks
-                for chunk in request.iter_content(chunk_size=1024):
-                    if chunk:
-                        f.write(chunk)
-        else:
-            raise CuckooAPIBadRequest(apiurl)
+        with open(filepath, 'wb') as f:
+            # Read and write in chunks
+            for chunk in request.iter_content(chunk_size=1024):
+                if chunk:
+                    f.write(chunk)
 
     def submitfile(self, filepath, data=None):
         """
@@ -361,9 +247,9 @@ class CuckooAPI(object):
         :param filepath: Path to a file to submit.
         :param data: This is data containing any other options for the
             submission form.  This is a dict of values accepted by the
-            create file options in the cuckoo-modified API.  More form
+            create file options in the cuckoo API.  More form
             information can be found in the following link:
-            https://github.com/spender-sandbox/cuckoo-modified/blob/master/docs/book/src/usage/api.rst
+            https://downloads.cuckoosandbox.org/docs/usage/api.html#tasks-create-file
         :returns: Returns the json results of the submission
 
         """
@@ -374,19 +260,15 @@ class CuckooAPI(object):
 
         # Build the URL
         apiurl = buildapiurl(self.proto, self.host, self.port,
-                             "/tasks/create/file", self.APIPY)
+                             "/tasks/create/file")
 
         with open(filepath, "rb") as sample:
             # multipart_file = {"file": ("temp_file_name", sample)}
             multipart_file = {"file": (os.path.basename(filepath), sample)}
             request = requests.post(apiurl, files=multipart_file, data=data)
 
-        # ERROR CHECK request.status_code!
-        if request.status_code == 200:
-            jsonreply = json.loads(request.text)
-            return jsonreply
-        else:
-            raise CuckooAPIBadRequest(apiurl)
+        jsonreply = json.loads(request.text)
+        return jsonreply
 
     def submiturl(self, url, data=None):
         """
@@ -395,56 +277,21 @@ class CuckooAPI(object):
         :param url: URL to submit.
         :param data: This is data containing any other options for the
             submission form.  This is a dict of values accepted by the
-            create file options in the cuckoo-modified API.  More form
+            create file options in the cuckoo API.  More form
             information can be found in the following link:
-            https://github.com/spender-sandbox/cuckoo-modified/blob/master/docs/book/src/usage/api.rst
+            https://downloads.cuckoosandbox.org/docs/usage/api.html#tasks-create-url
         :returns: Returns the json results of the submission
 
         """
         # Build the URL
         apiurl = buildapiurl(self.proto, self.host, self.port,
-                             "/tasks/create/url", self.APIPY)
+                             "/tasks/create/url")
 
         multipart_url = {"url": ("", url)}
         request = requests.post(apiurl, files=multipart_url, data=data)
 
-        # ERROR CHECK request.status_code!
-        if request.status_code == 200:
-            jsonreply = json.loads(request.text)
-            return jsonreply
-        else:
-            raise CuckooAPIBadRequest(apiurl)
-
-    def tasksearch(self, hashid=None, hashtype=None):
-        """
-
-        View information about a specific task by hash.
-
-        :param hashid: MD5, SHA1, or SHA256 hash to search.
-        :param hashtype: 'md5', 'sha1', or 'sha256'
-        :returns: Returns a dict with results.
-
-        """
-        if hashid is None:
-            raise CuckooAPINoHash(hashid, hashtype)
-
-        # Build the URL
-        apiurl = buildapiurl(self.proto, self.host, self.port,
-                             "/files/view/"+hashtype+"/"+hashid,
-                             self.APIPY)
-
-        # This appears to be unavailable in the documentation...
-        #if self.APIPY is True:
-        #    raise CuckooAPINotAvailable(apiurl)
-
-        request = requests.get(apiurl)
-
-        # ERROR CHECK request.status_code!
-        if request.status_code == 200:
-            jsonreply = json.loads(request.text)
-            return jsonreply
-        else:
-            raise CuckooAPIBadRequest(apiurl)
+        jsonreply = json.loads(request.text)
+        return jsonreply
 
     def fileview(self, hashid=None, hashtype=None):
         """
@@ -452,7 +299,7 @@ class CuckooAPI(object):
 
         :param hashid: The hash or task ID to search.
         :param hashtype: The following types of hash:
-            'taskid', 'md5', 'sha256'.  Any other values will cause
+            'id', 'md5', 'sha256'.  Any other values will cause
             an error!
         :returns: Returns the results of the file in a dict.
 
@@ -465,69 +312,44 @@ class CuckooAPI(object):
 
         # Build the URL
         apiurl = buildapiurl(self.proto, self.host, self.port,
-                             "/files/view/"+hashtype+"/"+hashid,
-                             self.APIPY)
+                             "/files/view/"+hashtype+"/"+hashid)
 
-        # This appears to be unavailable in the documentation...
-        if self.APIPY is True and hashtype == "sha1":
-            raise CuckooAPINotAvailable(apiurl)
-
-        if hashtype != "md5" and hashtype != "sha1" and hashtype != "sha256":
+        if hashtype != "md5" and hashtype != "id" and hashtype != "sha256":
             raise CuckooAPINotAvailable(apiurl)
 
         request = requests.get(apiurl)
 
-        # ERROR CHECK request.status_code!
-        if request.status_code == 200:
-            jsonreply = json.loads(request.text)
-            return jsonreply
-        else:
-            raise CuckooAPIBadRequest(apiurl)
+        jsonreply = json.loads(request.text)
+        return jsonreply
 
-    def sampledownload(self, hashid=None, hashtype=None,
+    def sampledownload(self, hashid=None,
                        filepath=None):
         """
         Download a file by hash.
 
-        :param hashid: The hash used to download the sample.
-        :param hashtype: The hash type, can be "task", "md5", sha1",
-            or "sha256".  "task" means the task ID.
+        :param hashid: The SHA256 hash used to download the sample.
         :returns: Nothing
 
         """
         # Get rid of ints
         hashid = str(hashid)
 
-        if hashid is None or hashtype is None:
-            raise CuckooAPINoHash(hashid, hashtype)
-
         if filepath is None or os.path.exists(filepath):
             raise CuckooAPIFileExists(filepath)
 
-        if self.APIPY is True:
-            baseurl = "/files/get/"+hashid
-        else:
-            baseurl = "/files/get/"+hashtype+"/"+hashid
+        baseurl = "/files/get/"+hashid
 
         apiurl = buildapiurl(self.proto, self.host, self.port,
-                             baseurl,
-                             self.APIPY)
-
-        if hashtype != "sha256" and self.APIPY is True:
-            raise CuckooAPINotAvailable(apiurl)
+                             baseurl)
 
         # Turn on stream to download files
         request = requests.get(apiurl, stream=True)
 
-        # ERROR CHECK request.status_code!
-        if request.status_code == 200:
-            with open(filepath, 'wb') as f:
-                # Read and write in chunks
-                for chunk in request.iter_content(chunk_size=1024):
-                    if chunk:
-                        f.write(chunk)
-        else:
-            raise CuckooAPIBadRequest(apiurl)
+        with open(filepath, 'wb') as f:
+            # Read and write in chunks
+            for chunk in request.iter_content(chunk_size=1024):
+                if chunk:
+                    f.write(chunk)
 
     def pcapdownload(self, taskid=None, filepath=None):
         """
@@ -543,178 +365,19 @@ class CuckooAPI(object):
         if filepath is None or os.path.exists(filepath):
             raise CuckooAPIFileExists(filepath)
 
-        if self.APIPY is True:
-            baseurl = "/pcap/get/"+str(taskid)
-        else:
-            baseurl = "/tasks/get/pcap/"+str(taskid)
+        baseurl = "/pcap/get/"+str(taskid)
 
         apiurl = buildapiurl(self.proto, self.host, self.port,
-                             baseurl,
-                             self.APIPY)
+                             baseurl)
 
         # Turn on stream to download files
         request = requests.get(apiurl, stream=True)
 
-        # ERROR CHECK request.status_code!
-        if request.status_code == 200:
-            with open(filepath, 'wb') as f:
-                # Read and write in chunks
-                for chunk in request.iter_content(chunk_size=1024):
-                    if chunk:
-                        f.write(chunk)
-        else:
-            raise CuckooAPIBadRequest(apiurl)
-
-    def droppeddownload(self, taskid=None, filepath=None):
-        """
-        Download files dropped by sample identified by task ID.
-
-        :param taskid: The task ID of the sample.
-        :param filepath: The file path of the file to create/download.
-        :returns: Nothing
-
-        """
-        if taskid is None or taskid < 1:
-            raise CuckooAPINoTaskID(taskid)
-
-        if filepath is None or os.path.exists(filepath):
-            raise CuckooAPIFileExists(filepath)
-
-        baseurl = "/tasks/get/dropped/"+str(taskid)
-
-        apiurl = buildapiurl(self.proto, self.host, self.port,
-                             baseurl,
-                             self.APIPY)
-
-        if self.APIPY is True:
-            raise CuckooAPINotAvailable(apiurl)
-
-        # Turn on stream to download files
-        request = requests.get(apiurl, stream=True)
-
-        # ERROR CHECK request.status_code!
-        if request.status_code == 200:
-            with open(filepath, 'wb') as f:
-                # Read and write in chunks
-                for chunk in request.iter_content(chunk_size=1024):
-                    if chunk:
-                        f.write(chunk)
-        else:
-            raise CuckooAPIBadRequest(apiurl)
-
-    def surifilesdownload(self, taskid=None, filepath=None):
-        """
-        Download SuriFiles for the sample identified by task ID.
-
-        :param taskid: The task ID of the sample.
-        :param filepath: The file path of the file to create/download.
-        :returns: Nothing
-
-        """
-        if taskid is None or taskid < 1:
-            raise CuckooAPINoTaskID(taskid)
-
-        if filepath is None or os.path.exists(filepath):
-            raise CuckooAPIFileExists(filepath)
-
-        baseurl = "/tasks/get/surifile/"+str(taskid)
-
-        apiurl = buildapiurl(self.proto, self.host, self.port,
-                             baseurl,
-                             self.APIPY)
-
-        if self.APIPY is True:
-            raise CuckooAPINotAvailable(apiurl)
-
-        # Turn on stream to download files
-        request = requests.get(apiurl, stream=True)
-
-        # ERROR CHECK request.status_code!
-        if request.status_code == 200:
-            with open(filepath, 'wb') as f:
-                # Read and write in chunks
-                for chunk in request.iter_content(chunk_size=1024):
-                    if chunk:
-                        f.write(chunk)
-        else:
-            raise CuckooAPIBadRequest(apiurl)
-
-    def fullmemdownload(self, taskid=None, filepath=None):
-        """
-        Download SuriFiles for the sample identified by task ID.
-
-        :param taskid: The task ID of the sample.
-        :param filepath: The file path of the file to create/download.
-        :returns: Nothing
-
-        """
-        if taskid is None or taskid < 1:
-            raise CuckooAPINoTaskID(taskid)
-
-        if filepath is None or os.path.exists(filepath):
-            raise CuckooAPIFileExists(filepath)
-
-        baseurl = "/tasks/get/fullmemory/"+str(taskid)
-
-        apiurl = buildapiurl(self.proto, self.host, self.port,
-                             baseurl,
-                             self.APIPY)
-
-        if self.APIPY is True:
-            raise CuckooAPINotAvailable(apiurl)
-
-        # Turn on stream to download files
-        request = requests.get(apiurl, stream=True)
-
-        # ERROR CHECK request.status_code!
-        if request.status_code == 200:
-            with open(filepath, 'wb') as f:
-                # Read and write in chunks
-                for chunk in request.iter_content(chunk_size=1024):
-                    if chunk:
-                        f.write(chunk)
-        else:
-            raise CuckooAPIBadRequest(apiurl)
-
-    def procmemdownload(self, taskid=None, filepath=None, pid=None):
-        """
-        Download SuriFiles for the sample identified by task ID.
-
-        :param taskid: The task ID of the sample.
-        :param filepath: The file path of the file to create/download.
-        :param pid: Process ID to download
-        :returns: Nothing
-
-        """
-        if taskid is None or taskid < 1:
-            raise CuckooAPINoTaskID(taskid)
-
-        if filepath is None or os.path.exists(filepath):
-            raise CuckooAPIFileExists(filepath)
-
-        baseurl = "/tasks/get/procmemory/"+str(taskid)
-        if pid is not None:
-            baseurl = baseurl+"/"+str(pid)
-
-        apiurl = buildapiurl(self.proto, self.host, self.port,
-                             baseurl,
-                             self.APIPY)
-
-        if self.APIPY is True:
-            raise CuckooAPINotAvailable(apiurl)
-
-        # Turn on stream to download files
-        request = requests.get(apiurl, stream=True)
-
-        # ERROR CHECK request.status_code!
-        if request.status_code == 200:
-            with open(filepath, 'wb') as f:
-                # Read and write in chunks
-                for chunk in request.iter_content(chunk_size=1024):
-                    if chunk:
-                        f.write(chunk)
-        else:
-            raise CuckooAPIBadRequest(apiurl)
+        with open(filepath, 'wb') as f:
+            # Read and write in chunks
+            for chunk in request.iter_content(chunk_size=1024):
+                if chunk:
+                    f.write(chunk)
 
 
 class CuckooAPIInvalidFileException(Exception):

@@ -11,15 +11,15 @@ def read(fname):
 
 
 setup(
-    name='cuckoo-modified-api',
-    version='20160927.1',
+    name='cuckoo-api',
+    version='20161122.1',
     author='Keith J. Jones',
     author_email='keith@keithjjones.com',
     packages=['CuckooAPI'],
-    url='https://github.com/keithjjones/cuckoo-modified-api',
+    url='https://github.com/keithjjones/cuckoo-api',
     license='LICENSE',
     description=('A Python library to '
-                 'interface with a cuckoo-modified instance'),
+                 'interface with a Cuckoo instance'),
     long_description=read('README.TXT'),
     install_requires=['requests[security]'],
 )
