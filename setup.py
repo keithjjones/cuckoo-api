@@ -20,6 +20,6 @@ setup(
     license='LICENSE',
     description=('A Python library to '
                  'interface with a Cuckoo instance'),
-    long_description=read('README.TXT'),
+    long_description=read('README.txt'),
     install_requires=['requests[security]'],
 )
