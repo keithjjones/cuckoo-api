@@ -12,7 +12,7 @@ def read(fname):
 
 setup(
     name='cuckoo-api',
-    version='20161122.1',
+    version='20170924.1',
     author='Keith J. Jones',
     author_email='keith@keithjjones.com',
     packages=['CuckooAPI'],
